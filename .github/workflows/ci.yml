@@ -7,11 +7,15 @@ env:
 
 on:
   pull_request:
-    branches: [ "master" ]
+    branches:
+      - "main"
+      - "production"
     paths-ignore: [ "docs/**" ]
 
   push:
-    branches: [ "master" ]
+    branches:
+      - "main"
+      - "production"
     paths-ignore: [ "docs/**" ]
 
 
@@ -23,10 +27,10 @@ jobs:
       - name: Checkout Code Repository
         uses: actions/checkout@v2
 
-      - name: Set up Python 3.8
+      - name: Set up Python 3.9
         uses: actions/setup-python@v2
         with:
-          python-version: 3.8
+          python-version: 3.9
 
       - name: Install flake8
         run: |
@@ -53,7 +57,9 @@ jobs:
         run:  docker-compose -f local.yml up -d
 
       - name: Run Django Tests
-        run:  docker-compose -f local.yml exec -T django pytest
+        run:  docker-compose -f local.yml run --rm django pytest
+        # https://github.com/pydanny/cookiecutter-django/issues/2848
+        # run:  docker-compose -f local.yml exec -T django pytest
 
       - name: Tear down the Stack
         run:  docker-compose -f local.yml down
