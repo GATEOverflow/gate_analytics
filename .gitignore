@@ -329,6 +329,3 @@ gate_analytics/media/
 .env
 .envs/*
 !.envs/.local/
-
-
-data/
