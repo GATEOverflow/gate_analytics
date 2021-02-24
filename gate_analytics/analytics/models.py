@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from django.db import models
 
 
@@ -38,10 +40,14 @@ class QuestionType(models.IntegerChoices):
     MSQ = 1
     NAT = 2
 
+    @staticmethod
+    def from_text(text: str) -> QuestionType:
+        return QuestionType[text.strip()[:3]]
+
 
 class Question(models.Model):
     exam = models.ForeignKey(Exam, on_delete=models.CASCADE)
-    number = models.IntegerField()
+    uid = models.CharField(max_length=255)
 
     image = models.URLField()
     gateoverflow_link = models.URLField()
@@ -51,10 +57,10 @@ class Question(models.Model):
     topics = models.ManyToManyField(Topic, blank=True, null=True)
 
     class Meta:
-        unique_together = (("exam", "number"),)
+        unique_together = (("exam", "uid"),)
 
     def __str__(self):
-        return f"{self.exam}-{self.number}"
+        return f"{self.exam}-{self.uid}"
 
 
 class AnswerKey(models.Model):
@@ -126,10 +132,25 @@ class SubmissionEvaluation(models.Model):
         return f"{self.submission}-{self.key}-{self.net_marks:.2f}"
 
 
+class SubmissionItemStatus(models.IntegerChoices):
+    Answered = 0
+    NotAttempted = 1
+
+    @staticmethod
+    def from_text(text: str) -> SubmissionItemStatus:
+        if "Not Attempted" in text:
+            return SubmissionItemStatus.NotAttempted
+        elif "Answered" in text:
+            return SubmissionItemStatus.Answered
+        else:
+            raise ValueError(text)
+
+
 class SubmissionItem(models.Model):
     submission = models.ForeignKey(Submission, on_delete=models.CASCADE)
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
-    answer = models.TextField()
+    status = models.IntegerField(choices=SubmissionItemStatus.choices)
+    answer = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
-        return f"{self.submission}-{self.question}-{self.answer}"
+        return f"{self.submission}-{self.question}-{self.status}-{self.answer}"
